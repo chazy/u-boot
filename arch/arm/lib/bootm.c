@@ -34,8 +34,11 @@
 #include <mmc.h>
 #include <asm/omap_common.h>
 #include <asm/arch/mmc_host_def.h>
+#include <asm/io.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define BIT(x)  (1<<(x))
 
 #if defined (CONFIG_SETUP_MEMORY_TAGS) || \
     defined (CONFIG_CMDLINE_TAG) || \
@@ -63,6 +66,7 @@ static ulong get_sp(void);
 static int bootm_linux_fdt(int machid, bootm_headers_t *images);
 #endif
 
+int get_boot_slot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 int do_booti(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 static u64 get_start_sector(unsigned char *sector, char *ptn);
 static u64 get_partition(struct mmc *mmc, char *ptn);
@@ -484,6 +488,36 @@ U_BOOT_CMD(
 	"booti   - boot android bootimg from memory\n",
 	"<addr>\n    - boot application image stored in memory\n"
 	"\t'addr' - address of boot image which contains zImage + ramdisk\n"
+);
+
+/**
+*  get_boot_slot: Returns boot from SD or eMMC
+* @ret: 1:SD   0:eMMC
+*/
+int get_boot_slot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	if (argc > 1)
+		return 1;
+
+	switch (omap_boot_device()) {
+	case BOOT_DEVICE_MMC1:
+		printf("current boot device is sd card\n");
+		return 1;
+		break;
+	case BOOT_DEVICE_MMC2:
+	case BOOT_DEVICE_MMC2_2:
+		printf("current boot device is emmc\n");
+		return 0;
+		break;
+	}
+
+	return 1;
+}
+
+U_BOOT_CMD(
+	bootdevice,  3,      0,      get_boot_slot,
+	"- get boot device we booted out from\n",
+	"- returns 0 for eMMC and returns 1 for sd card boot\n"
 );
 
 #if defined (CONFIG_SETUP_MEMORY_TAGS) || \

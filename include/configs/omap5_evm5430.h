@@ -166,43 +166,98 @@
 /*
  * Environment setup
  */
-
 #define CONFIG_BOOTDELAY	3
 
 #define CONFIG_ENV_OVERWRITE
 
+/* This is the default case */
+#ifndef CONFIG_OMAP_ANDROID
+	#define CONFIG_EXTRA_ENV_SETTINGS \
+		"usbethaddr=9e:77:39:1b:c4:2d\0" \
+		"loadaddr=0x82000000\0" \
+		"console=ttyO2,115200n8\0" \
+		"usbtty=cdc_acm\0" \
+		"vram=16M\0" \
+		"mmcdev=0\0" \
+		"mmcroot=/dev/mmcblk0p2 rw\0" \
+		"mmcrootfstype=ext3 rootwait\0" \
+		"mmcargs=setenv bootargs console=${console} " \
+			"vram=${vram} " \
+			"root=${mmcroot} " \
+			"rootfstype=${mmcrootfstype}\0" \
+		"loadbootscript=fatload mmc ${mmcdev} ${loadaddr} boot.scr\0" \
+		"bootscript=echo Running bootscript from mmc${mmcdev} ...; " \
+			"source ${loadaddr}\0" \
+		"loaduimage=fatload mmc ${mmcdev} ${loadaddr} uImage\0" \
+		"mmcboot=echo Booting from mmc${mmcdev} ...; " \
+			"run mmcargs; " \
+			"bootm ${loadaddr}\0" \
+
+	#define CONFIG_BOOTCOMMAND \
+		"if mmc rescan ${mmcdev}; then " \
+			"if run loadbootscript; then " \
+				"run bootscript; " \
+			"else " \
+				"if run loaduimage; then " \
+					"run mmcboot; " \
+				"fi; " \
+			"fi; " \
+		"fi "
+
+#else
+
+/* This is used when we build for ANDROID i.e. omap5_evm5430_android */
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"usbethaddr=9e:77:39:1b:c4:2d\0" \
-	"loadaddr=0x82000000\0" \
-	"console=ttyO2,115200n8\0" \
-	"usbtty=cdc_acm\0" \
-	"vram=16M\0" \
-	"mmcdev=0\0" \
-	"mmcroot=/dev/mmcblk0p2 rw\0" \
-	"mmcrootfstype=ext3 rootwait\0" \
-	"mmcargs=setenv bootargs console=${console} " \
-		"vram=${vram} " \
-		"root=${mmcroot} " \
-		"rootfstype=${mmcrootfstype}\0" \
-	"loadbootscript=fatload mmc ${mmcdev} ${loadaddr} boot.scr\0" \
-	"bootscript=echo Running bootscript from mmc${mmcdev} ...; " \
-		"source ${loadaddr}\0" \
-	"loaduimage=fatload mmc ${mmcdev} ${loadaddr} uImage\0" \
-	"mmcboot=echo Booting from mmc${mmcdev} ...; " \
-		"run mmcargs; " \
-		"bootm ${loadaddr}\0"
+	"if bootdevice; then " \
+		"console=ttyO2,115200n8\0" \
+		"vram=16M\0" \
+		"emmcargs=setenv bootargs console=${console} " \
+			"mem=456M@0x80000000 " \
+			"mem=512M@0xA0000000 " \
+			"omapfb.vram=0:4M " \
+			"androidboot.console=ttyO2 " \
+			"init=/init " \
+			"vram=${vram}\0" \
+		"emmcboot=echo Booting from emmc ...; " \
+				"run emmcargs; " \
+				"booti mmc1\0" \
+	"else " \
+		"usbethaddr=9e:77:39:1b:c4:2d\0" \
+		"loadaddr=0x82000000\0" \
+		"console=ttyO2,115200n8\0" \
+		"usbtty=cdc_acm\0" \
+		"vram=16M\0" \
+		"mmcdev=0\0" \
+		"mmcroot=/dev/mmcblk0p2 rw\0" \
+		"mmcrootfstype=ext3 rootwait\0" \
+		"mmcargs=setenv bootargs console=${console} " \
+			"vram=${vram} " \
+			"root=${mmcroot} " \
+			"rootfstype=${mmcrootfstype}\0" \
+		"loadbootscript=fatload mmc ${mmcdev} ${loadaddr} boot.scr\0" \
+		"bootscript=echo Running bootscript from mmc${mmcdev} ...; " \
+			"source ${loadaddr}\0" \
+		"loaduimage=fatload mmc ${mmcdev} ${loadaddr} uImage\0" \
+		"mmcboot=echo Booting from mmc${mmcdev} ...; " \
+			"run mmcargs; " \
+			"bootm ${loadaddr}\0" \
+	"fi"
 
 #define CONFIG_BOOTCOMMAND \
-	"if mmc rescan ${mmcdev}; then " \
-		"if run loadbootscript; then " \
-			"run bootscript; " \
-		"else " \
-			"if run loaduimage; then " \
-				"run mmcboot; " \
+	"if bootdevice; then " \
+		"run emmcboot; " \
+	"else " \
+		"if mmc rescan ${mmcdev}; then " \
+			"if run loadbootscript; then " \
+				"run bootscript; " \
+			"else " \
+				"if run loaduimage; then " \
+					"run mmcboot; " \
+				"fi; " \
 			"fi; " \
 		"fi; " \
 	"fi"
-
+#endif
 
 #define CONFIG_AUTO_COMPLETE		1
 
