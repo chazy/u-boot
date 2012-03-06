@@ -42,7 +42,6 @@ DECLARE_GLOBAL_DATA_PTR;
  */
 struct omap_boot_parameters boot_params __attribute__ ((section(".data")));
 
-#ifdef CONFIG_SPL_BUILD
 /*
  * We use static variables because global data is not ready yet.
  * Initialized data is available in SPL right from the beginning.
@@ -60,7 +59,6 @@ u32 omap_boot_mode(void)
 {
 	return omap_bootmode;
 }
-#endif
 
 void do_set_mux(u32 base, struct pad_conf_entry const *array, int size)
 {
